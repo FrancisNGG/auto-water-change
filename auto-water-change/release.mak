@@ -18,7 +18,7 @@ CXXFLAGS := -ggdb -ffunction-sections -fno-exceptions -fno-rtti -O3
 ASFLAGS := 
 LDFLAGS := -Wl,-gc-sections
 COMMONFLAGS := 
-LINKER_SCRIPT := C:\Users\lices\Desktop\auto-water-change\STM32F103C8TX_FLASH.ld
+LINKER_SCRIPT := ../STM32F103C8TX_FLASH.ld
 
 START_GROUP := -Wl,--start-group
 END_GROUP := -Wl,--end-group

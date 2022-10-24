@@ -13,19 +13,17 @@
 
 typedef enum
 {
-	WAITING = 0,
-	WATER_ERROR,
-	WATER_OUT,
-	WATER_IN,
-	WATER_FINISH,
-	WATER_FULL,
-	WATER_FULL_CHECK
-}STATUS_e;
+	INDEX = 0,
+	M_CTRL,
+	TIME_SET,
+	SETTING,
+	KEY
+}NOW_PAGE_e;
 
 
 typedef struct HMI_REG_s
 {
-	//uint8_t status;//整体状态
+	uint8_t now_page;//当前页面
 	uint8_t run_once;//执行一次标志位
 	uint32_t *ir_data;//接收到的红外数据
 	uint8_t is_time_up;//每秒刷新HMI时间标志位
@@ -35,7 +33,7 @@ typedef struct HMI_REG_s
 	uint8_t is_water_low;//低水位标志位
 	uint16_t water_error_time;//水满，自动放水的时长		
 	uint8_t is_alarm_paly;//到达声音警报时间标志位
-	uint16_t adc_val_last;//上一次ADC记录值
+	int16_t adc_val_last;//上一次ADC记录值
 }__packed HMI_REG_t;
 
 extern HMI_REG_t HmiReg;

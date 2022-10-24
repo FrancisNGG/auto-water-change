@@ -109,7 +109,7 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 #ifdef RELEASE
-	SetFlashReadProtection(1);
+	//SetFlashReadProtection(1);//开了读保护后，时间不更新，不想修了
 #endif // RELEASE 
   /* USER CODE END SysInit */
 

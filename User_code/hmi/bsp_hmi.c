@@ -150,7 +150,10 @@ void water_stop_handle()
 /* 水满操作 */
 void water_full_handle()
 {
-	hmi_cmd_transmit("page index");
+	if (HmiReg.now_page != INDEX)//如果当前页面不在主页，则返回主页再开始操作
+	{
+		hmi_cmd_transmit("page index");
+	}
 	hmi_cmd_transmit("vis bt0,0");
 	hmi_cmd_transmit("vis b1,0");
 	hmi_cmd_transmit("vis b2,0");
@@ -161,7 +164,7 @@ void water_full_handle()
 }
 
 void warning_clear_handle()
-{	
+{
 	hmi_cmd_transmit("vis bt0,1");
 	hmi_cmd_transmit("vis b1,1");
 	hmi_cmd_transmit("vis b2,1");
@@ -181,7 +184,7 @@ void click_run()
 	//}
 	//else
 	//{
-		water_out_handle();
+	water_out_handle();
 	//}
 }
 
@@ -191,6 +194,7 @@ void MenuUARTFuntion(uint8_t* dat)
 	/* 打开主页 */
 	if (memcmp(dat, "index", 5) == 0)
 	{
+		HmiReg.now_page = INDEX;
 		char str[10];
 		Int2String(SettingRegBuff.isAlarmOpen, str);
 		hmi_cmd_transmit("setting.c0.val=%s", str);
@@ -272,6 +276,7 @@ void MenuUARTFuntion(uint8_t* dat)
 	/* 打开设置 */
 	else if (memcmp(dat, "setting", 7) == 0)
 	{
+		HmiReg.now_page = SETTING;
 		HAL_GPIO_WritePin(REC_GPIO_Port, REC_Pin, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(PLAY_E_GPIO_Port, PLAY_E_Pin, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(WATER_IN_SW_GPIO_Port, WATER_IN_SW_Pin, GPIO_PIN_SET);//关闭进水阀门
@@ -283,6 +288,12 @@ void MenuUARTFuntion(uint8_t* dat)
 		hmi_cmd_transmit("setting.min.val=%s", str);
 		Int2String(SettingRegBuff.isAlarmOpen, str);
 		hmi_cmd_transmit("setting.c0.val=%s", str);
+	}
+
+	/* 时间设置页面 */
+	else if (memcmp(dat, "time_set", 8) == 0)
+	{
+		HmiReg.now_page = TIME_SET;
 	}
 
 	/* 时间设置 */
@@ -337,6 +348,12 @@ void MenuUARTFuntion(uint8_t* dat)
 		HAL_GPIO_WritePin(PLAY_E_GPIO_Port, PLAY_E_Pin, GPIO_PIN_SET);
 	}
 
+	/* 手动模式页面 mcrtl = manual_control */
+	else if (memcmp(dat, "m_ctrl", 6) == 0)
+	{
+		HmiReg.now_page = M_CTRL;
+	}
+
 	/* 手动放水 m_wt_o = manual_control_water_out */
 	else if (memcmp(dat, "m_wt_o", 6) == 0)
 	{
@@ -369,5 +386,11 @@ void MenuUARTFuntion(uint8_t* dat)
 			HAL_GPIO_WritePin(WATER_IN_SW_GPIO_Port, WATER_IN_SW_Pin, GPIO_PIN_SET);//关闭进水阀门
 			hmi_cmd_transmit("mctrl.bt1.txt=\"开始进水\"");
 		}
+	}
+
+	/* 键盘页面 */
+	else if (memcmp(dat, "keyboard", 8) == 0)
+	{
+		HmiReg.now_page = KEY;
 	}
 }
