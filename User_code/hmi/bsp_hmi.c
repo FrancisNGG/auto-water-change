@@ -16,7 +16,6 @@ extern UART_HandleTypeDef huart1;
 extern TIM_HandleTypeDef htim3;
 extern osMessageQueueId_t LcdTxQueueHandle;
 
-//HMI_TIME_t hmi_time;
 HMI_REG_t HmiReg;
 
 /*指令打包写入消息缓冲区*/
@@ -121,21 +120,34 @@ void reflush_hmi_date()
 	}
 }
 
-
-
 /* 执行放水 */
 void water_out_handle()
 {
+	if (HmiReg.is_water_low)
+	{
+		hmi_cmd_transmit("index.t5.txt=\"当前水位低，禁止放水！！\"");
+		WATER_OUT_OFF;
+		WATER_IN_OFF;
+		return;
+	}
 	hmi_cmd_transmit("index.t5.txt=\"正在执行放水...\"");
-	HAL_GPIO_WritePin(WATER_IN_SW_GPIO_Port, WATER_IN_SW_Pin, GPIO_PIN_SET);//关闭进水阀门
-	HAL_GPIO_WritePin(WATER_OUT_SW_GPIO_Port, WATER_OUT_SW_Pin, GPIO_PIN_RESET);//打开出水阀门
+	WATER_OUT_ON;
+	WATER_IN_OFF;
 }
 /* 执行进水 */
 void water_in_handle()
 {
+	HmiReg.is_water_low = 0;//标志位置零，防止loop重入
+	if (HmiReg.is_water_full)
+	{
+		hmi_cmd_transmit("index.t5.txt=\"当前水满，禁止进水！！\"");
+		WATER_OUT_OFF;
+		WATER_IN_OFF;
+		return;
+	}
 	hmi_cmd_transmit("index.t5.txt=\"正在执行进水...\"");
-	HAL_GPIO_WritePin(WATER_OUT_SW_GPIO_Port, WATER_OUT_SW_Pin, GPIO_PIN_SET);//关闭出水阀门
-	HAL_GPIO_WritePin(WATER_IN_SW_GPIO_Port, WATER_IN_SW_Pin, GPIO_PIN_RESET);//打开进水阀门
+	WATER_OUT_OFF;
+	WATER_IN_ON;
 }
 /* 停止 */
 void water_stop_handle()
@@ -143,8 +155,8 @@ void water_stop_handle()
 	hmi_cmd_transmit("vis b2,0");
 	hmi_cmd_transmit("vis b1,1");
 	hmi_cmd_transmit("index.t5.txt=\"停止操作！！\"");
-	HAL_GPIO_WritePin(WATER_OUT_SW_GPIO_Port, WATER_OUT_SW_Pin, GPIO_PIN_SET);//关闭出水阀门
-	HAL_GPIO_WritePin(WATER_IN_SW_GPIO_Port, WATER_IN_SW_Pin, GPIO_PIN_SET);//关闭进水阀门
+	WATER_OUT_OFF;
+	WATER_IN_OFF;
 }
 
 /* 水满操作 */
@@ -157,10 +169,9 @@ void water_full_handle()
 	hmi_cmd_transmit("vis bt0,0");
 	hmi_cmd_transmit("vis b1,0");
 	hmi_cmd_transmit("vis b2,0");
-	hmi_cmd_transmit("index.t5.txt=\"到达警戒水位，将持续放水...\"");
+	hmi_cmd_transmit("index.t5.txt=\"到达警戒水位，禁止进水...\"");
 	hmi_cmd_transmit("index.t5.pco=%s", RED);
-	HAL_GPIO_WritePin(WATER_IN_SW_GPIO_Port, WATER_IN_SW_Pin, GPIO_PIN_SET);//关闭进水阀门
-	HAL_GPIO_WritePin(WATER_OUT_SW_GPIO_Port, WATER_OUT_SW_Pin, GPIO_PIN_RESET);//打开出水阀门
+	WATER_IN_OFF;
 }
 
 void warning_clear_handle()
@@ -170,22 +181,22 @@ void warning_clear_handle()
 	hmi_cmd_transmit("vis b2,1");
 	hmi_cmd_transmit("index.t5.txt=\"水位恢复正常，持续检测中...\"");
 	hmi_cmd_transmit("index.t5.pco=%s", GREEN);
-	HAL_GPIO_WritePin(WATER_IN_SW_GPIO_Port, WATER_IN_SW_Pin, GPIO_PIN_SET);//关闭进水阀门
-	HAL_GPIO_WritePin(WATER_OUT_SW_GPIO_Port, WATER_OUT_SW_Pin, GPIO_PIN_SET);//关闭出水阀门
+	WATER_OUT_OFF;
+	WATER_IN_OFF;
 }
 
 /* 执行一次换水操作 */
 void click_run()
 {
 	HmiReg.run_once = 1;
-	//if (HmiReg.is_water_low)//已经到达低水位
-	//{
-	//	water_in_handle();
-	//}
-	//else
-	//{
-	water_out_handle();
-	//}
+	if (HmiReg.is_water_low)
+	{
+		water_in_handle();
+	}
+	else
+	{
+		water_out_handle();
+	}	
 }
 
 
@@ -257,7 +268,7 @@ void MenuUARTFuntion(uint8_t* dat)
 	{
 		if (!HmiReg.is_water_full)//非警戒水位
 		{
-			HAL_GPIO_WritePin(WATER_IN_SW_GPIO_Port, WATER_IN_SW_Pin, GPIO_PIN_SET);//关闭进水阀门
+			WATER_IN_OFF;
 			hmi_cmd_transmit("index.t5.txt=\"所有操作已完成\"");
 			hmi_cmd_transmit("index.t5.pco=%s", GREEN);
 			hmi_cmd_transmit("vis t6,0");
@@ -269,8 +280,8 @@ void MenuUARTFuntion(uint8_t* dat)
 	/* 停止操作 wt_stop = water_stop */
 	else if (memcmp(dat, "wt_stop", 7) == 0)
 	{
-		HAL_GPIO_WritePin(WATER_OUT_SW_GPIO_Port, WATER_OUT_SW_Pin, GPIO_PIN_SET);//关闭出水阀门
-		HAL_GPIO_WritePin(WATER_IN_SW_GPIO_Port, WATER_IN_SW_Pin, GPIO_PIN_SET);//关闭进水阀门
+		WATER_OUT_OFF;
+		WATER_IN_OFF;
 	}
 
 	/* 打开设置 */
@@ -279,8 +290,8 @@ void MenuUARTFuntion(uint8_t* dat)
 		HmiReg.now_page = SETTING;
 		HAL_GPIO_WritePin(REC_GPIO_Port, REC_Pin, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(PLAY_E_GPIO_Port, PLAY_E_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(WATER_IN_SW_GPIO_Port, WATER_IN_SW_Pin, GPIO_PIN_SET);//关闭进水阀门
-		HAL_GPIO_WritePin(WATER_OUT_SW_GPIO_Port, WATER_OUT_SW_Pin, GPIO_PIN_SET);//关闭出水阀门
+		WATER_OUT_OFF;
+		WATER_IN_OFF;
 		char str[10];
 		Int2String(SettingRegBuff.sAlarm_hr, str);
 		hmi_cmd_transmit("setting.hr.val=%s", str);
@@ -359,14 +370,14 @@ void MenuUARTFuntion(uint8_t* dat)
 	{
 		if (*(uint16_t*)(dat + 6))//判断双态按钮的值是否按下
 		{
-			HAL_GPIO_WritePin(WATER_IN_SW_GPIO_Port, WATER_IN_SW_Pin, GPIO_PIN_SET);//关闭进水阀门
-			HAL_GPIO_WritePin(WATER_OUT_SW_GPIO_Port, WATER_OUT_SW_Pin, GPIO_PIN_RESET);//打开出水阀门
+			WATER_IN_OFF;
+			WATER_OUT_ON;
 			hmi_cmd_transmit("mctrl.bt0.txt=\"结束放水\"");
 			hmi_cmd_transmit("mctrl.bt1.txt=\"开始进水\"");
 		}
 		else
 		{
-			HAL_GPIO_WritePin(WATER_OUT_SW_GPIO_Port, WATER_OUT_SW_Pin, GPIO_PIN_SET);//关闭出水阀门
+			WATER_OUT_OFF;
 			hmi_cmd_transmit("mctrl.bt0.txt=\"开始放水\"");
 		}
 	}
@@ -376,14 +387,14 @@ void MenuUARTFuntion(uint8_t* dat)
 	{
 		if (*(uint16_t*)(dat + 6))
 		{
-			HAL_GPIO_WritePin(WATER_OUT_SW_GPIO_Port, WATER_OUT_SW_Pin, GPIO_PIN_SET);//关闭出水阀门
-			HAL_GPIO_WritePin(WATER_IN_SW_GPIO_Port, WATER_IN_SW_Pin, GPIO_PIN_RESET);//打开进水阀门
+			WATER_OUT_OFF;
+			WATER_IN_ON;
 			hmi_cmd_transmit("mctrl.bt1.txt=\"结束进水\"");
 			hmi_cmd_transmit("mctrl.bt0.txt=\"开始放水\"");
 		}
 		else
 		{
-			HAL_GPIO_WritePin(WATER_IN_SW_GPIO_Port, WATER_IN_SW_Pin, GPIO_PIN_SET);//关闭进水阀门
+			WATER_IN_OFF;
 			hmi_cmd_transmit("mctrl.bt1.txt=\"开始进水\"");
 		}
 	}

@@ -87,9 +87,9 @@ void begin()
 {
 	debug();
 
-	/* 拉高关闭电磁阀 */
-	HAL_GPIO_WritePin(WATER_IN_SW_GPIO_Port, WATER_IN_SW_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(WATER_OUT_SW_GPIO_Port, WATER_OUT_SW_Pin, GPIO_PIN_SET);
+	/* 关闭电磁阀 */
+	WATER_OUT_OFF;
+	WATER_IN_OFF;
 
 	/*读取配置信息*/
 	memset(&SettingRegBuff, 0x00, sizeof(SettingRegBuff));
@@ -111,9 +111,6 @@ void begin()
 
 	osDelay(500);//屏幕跟不上
 	hmi_cmd_transmit("page index");//刷新屏幕
-
-	//adc_val = HAL_ADC_GetValue(&hadc1);
-	//adc_val_last = adc_val;
 }
 
 /* 默认任务循环体 */
@@ -125,11 +122,11 @@ void loop()
 		osDelay(100);
 		HmiReg.is_alarm = 0;
 	}
-	if (HmiReg.run_once && HmiReg.is_water_low)
+	if (HmiReg.run_once && HmiReg.is_water_low)//当执行自动换水时，水位正处于低水位，则在这里直接执行进水
 	{
 		water_in_handle();
 	}
-	if (HmiReg.is_alarm_paly)//警报延迟后，如未恢复正常，则播放声音告警
+	if (HmiReg.is_alarm_paly)//水满声音告警
 	{
 		HAL_GPIO_WritePin(PLAY_E_GPIO_Port, PLAY_E_Pin, GPIO_PIN_SET);
 		osDelay(100);

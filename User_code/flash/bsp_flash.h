@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #ifndef __BSP_FLASH_H__
 #define __BSP_FLASH_H__
 #include "main.h"
@@ -11,16 +11,12 @@ bool SetFlashReadProtection(bool state);
 
 typedef struct SettingREG_s
 {
-	uint8_t isExist;//²»ÄÜÓÃbool¶¨Òå,ÓĞ¿ÉÄÜflashÎª0xff,Ò²Îªture,µ«Êµ¼ÊÊÇ¿ÕµÄ
-	//uint16_t water_out_time;//·ÅË®Ê±³¤£¬µ¥Î»s
-	//uint16_t water_in_time;//½øË®Ê±³¤£¬µ¥Î»s	
-	//uint16_t water_error_time;//¾¯±¨¼ì²éÊ±³¤£¬µ¥Î»s	
-	uint8_t sAlarm_hr;//¶¨Ê±Ö´ĞĞµÄÊ±¼ä---Ğ¡Ê±
-	uint8_t sAlarm_min;//¶¨Ê±Ö´ĞĞµÄÊ±¼ä---·ÖÖÓ
-	uint8_t isAlarmOpen;//ÉùÒô¾¯±¨¿ª¹Ø 1=¿ª 0=¹Ø ¹Ø±Õºó£¬¾¯½äË®Î»³¬Ê±²»»á²¥·ÅÒôÀÖ
-	//uint8_t no_sensor;//ºöÂÔ´«¸ĞÆ÷¿ª¹Ø
-	uint8_t auto_run_flag;//¶¨Ê±Ä£Ê½×´Ì¬
-}__packed SettingREG_t;
+	uint8_t isExist;//ä¸èƒ½ç”¨boolå®šä¹‰,æœ‰å¯èƒ½flashä¸º0xff,ä¹Ÿä¸ºture,ä½†å®é™…æ˜¯ç©ºçš„
+	uint8_t sAlarm_hr;//å®šæ—¶æ‰§è¡Œçš„æ—¶é—´---å°æ—¶
+	uint8_t sAlarm_min;//å®šæ—¶æ‰§è¡Œçš„æ—¶é—´---åˆ†é’Ÿ
+	uint8_t isAlarmOpen;//å£°éŸ³è­¦æŠ¥å¼€å…³ 1=å¼€ 0=å…³ å…³é—­åï¼Œè­¦æˆ’æ°´ä½è¶…æ—¶ä¸ä¼šæ’­æ”¾éŸ³ä¹
+	uint8_t auto_run_flag;//å®šæ—¶æ¨¡å¼çŠ¶æ€
+}SettingREG_t;
 
 extern SettingREG_t* pSettingReg;
 extern SettingREG_t SettingRegBuff;

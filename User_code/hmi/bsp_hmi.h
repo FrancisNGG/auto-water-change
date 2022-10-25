@@ -11,6 +11,11 @@
 #define IS_WATER_OUT 0x00FF4AB5
 #define IS_STOP 0x00FFB04F
 
+#define WATER_OUT_ON	HAL_GPIO_WritePin(WATER_OUT_SW_GPIO_Port, WATER_OUT_SW_Pin, GPIO_PIN_RESET);//打开出水阀门
+#define WATER_OUT_OFF	HAL_GPIO_WritePin(WATER_OUT_SW_GPIO_Port, WATER_OUT_SW_Pin, GPIO_PIN_SET);//关闭出水阀门
+#define WATER_IN_ON		HAL_GPIO_WritePin(WATER_IN_SW_GPIO_Port, WATER_IN_SW_Pin, GPIO_PIN_RESET);//打开进水阀门
+#define WATER_IN_OFF	HAL_GPIO_WritePin(WATER_IN_SW_GPIO_Port, WATER_IN_SW_Pin, GPIO_PIN_SET);//关闭进水阀门
+
 typedef enum
 {
 	INDEX = 0,
