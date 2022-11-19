@@ -106,9 +106,9 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     /**ADC1 GPIO Configuration
     PB1     ------> ADC1_IN9
     */
-    GPIO_InitStruct.Pin = WATER_FULL_Pin;
+    GPIO_InitStruct.Pin = WATER_WARNING_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    HAL_GPIO_Init(WATER_FULL_GPIO_Port, &GPIO_InitStruct);
+    HAL_GPIO_Init(WATER_WARNING_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN ADC1_MspInit 1 */
 
@@ -136,7 +136,7 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     /**ADC1 GPIO Configuration
     PB1     ------> ADC1_IN9
     */
-    HAL_GPIO_DeInit(WATER_FULL_GPIO_Port, WATER_FULL_Pin);
+    HAL_GPIO_DeInit(WATER_WARNING_GPIO_Port, WATER_WARNING_Pin);
 
   /* USER CODE BEGIN ADC1_MspDeInit 1 */
 

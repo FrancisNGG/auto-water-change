@@ -138,7 +138,7 @@ void water_out_handle()
 void water_in_handle()
 {
 	HmiReg.is_water_low = 0;//标志位置零，防止loop重入
-	if (HmiReg.is_water_full)
+	if (HmiReg.is_water_warning)
 	{
 		hmi_cmd_transmit("index.t5.txt=\"当前水满，禁止进水！！\"");
 		WATER_OUT_OFF;
@@ -159,24 +159,44 @@ void water_stop_handle()
 	WATER_IN_OFF;
 }
 
-/* 水满操作 */
-void water_full_handle()
+/* 到达高水位操作 */
+void water_high_handle()
+{
+	HmiReg.run_once = 0;
+	HmiReg.is_water_high = 0;
+	if (HmiReg.now_page != INDEX)//如果当前页面不在主页，则返回主页再开始操作
+	{
+		hmi_cmd_transmit("page index");
+	}
+	//hmi_cmd_transmit("vis bt0,0");
+	hmi_cmd_transmit("vis b1,1");
+	hmi_cmd_transmit("vis b2,0");
+	hmi_cmd_transmit("index.t5.txt=\"已到达高水位，操作完成...\"");
+	hmi_cmd_transmit("index.t5.pco=%s", GREEN);
+	WATER_IN_OFF;
+}
+
+/* 到达警戒水位 持续放水 */
+void water_warning_handle()
 {
 	if (HmiReg.now_page != INDEX)//如果当前页面不在主页，则返回主页再开始操作
 	{
 		hmi_cmd_transmit("page index");
 	}
 	hmi_cmd_transmit("vis bt0,0");
+	hmi_cmd_transmit("vis b0,0");
 	hmi_cmd_transmit("vis b1,0");
 	hmi_cmd_transmit("vis b2,0");
-	hmi_cmd_transmit("index.t5.txt=\"到达警戒水位，禁止进水...\"");
+	hmi_cmd_transmit("index.t5.txt=\"到达警戒水位，持续放水...\"");
 	hmi_cmd_transmit("index.t5.pco=%s", RED);
 	WATER_IN_OFF;
+	WATER_OUT_ON;
 }
 
 void warning_clear_handle()
 {
 	hmi_cmd_transmit("vis bt0,1");
+	hmi_cmd_transmit("vis b0,1");
 	hmi_cmd_transmit("vis b1,1");
 	hmi_cmd_transmit("vis b2,1");
 	hmi_cmd_transmit("index.t5.txt=\"水位恢复正常，持续检测中...\"");
@@ -249,7 +269,7 @@ void MenuUARTFuntion(uint8_t* dat)
 	/* 放水 */
 	else if (memcmp(dat, "water_out", 9) == 0)
 	{
-		if (!HmiReg.is_water_full)//非警戒水位
+		if (!HmiReg.is_water_warning)//非警戒水位
 		{
 			water_in_handle();
 		}
@@ -257,7 +277,7 @@ void MenuUARTFuntion(uint8_t* dat)
 	/* 进水 */
 	else if (memcmp(dat, "water_in", 8) == 0)
 	{
-		if (!HmiReg.is_water_full)//非警戒水位
+		if (!HmiReg.is_water_warning)//非警戒水位
 		{
 			water_in_handle();
 		}
@@ -266,7 +286,7 @@ void MenuUARTFuntion(uint8_t* dat)
 	/* 完成 */
 	else if (memcmp(dat, "water_finish", 12) == 0)
 	{
-		if (!HmiReg.is_water_full)//非警戒水位
+		if (!HmiReg.is_water_warning)//非警戒水位
 		{
 			WATER_IN_OFF;
 			hmi_cmd_transmit("index.t5.txt=\"所有操作已完成\"");

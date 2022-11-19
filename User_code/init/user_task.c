@@ -116,7 +116,7 @@ void begin()
 /* 默认任务循环体 */
 void loop()
 {
-	if (HmiReg.is_alarm && SettingRegBuff.auto_run_flag && HmiReg.is_water_full == 0)//到达自动换水时间
+	if (HmiReg.is_alarm && SettingRegBuff.auto_run_flag && HmiReg.is_water_warning == 0)//到达自动换水时间
 	{
 		click_run();
 		osDelay(100);
@@ -125,6 +125,10 @@ void loop()
 	if (HmiReg.run_once && HmiReg.is_water_low)//当执行自动换水时，水位正处于低水位，则在这里直接执行进水
 	{
 		water_in_handle();
+	}
+	if (HmiReg.run_once && HmiReg.is_water_high)//到达了高水位
+	{
+		water_high_handle();
 	}
 	if (HmiReg.is_alarm_paly)//水满声音告警
 	{
@@ -156,7 +160,7 @@ void loop()
 }
 
 //水满检测
-void WaterFullCheck(void)
+static void WaterWarningCheck(void)
 {
 	if ((HAL_ADC_GetValue(&hadc1) != HmiReg.adc_val_last) &&
 		(HmiReg.adc_val_last + 100) < HAL_ADC_GetValue(&hadc1) ||
@@ -165,19 +169,19 @@ void WaterFullCheck(void)
 		HmiReg.adc_val_last = HAL_ADC_GetValue(&hadc1);
 		if (HAL_ADC_GetValue(&hadc1) > 3400)
 		{
-			HmiReg.is_water_full = 0;
+			HmiReg.is_water_warning = 0;
 			HmiReg.run_once = 0;
 			warning_clear_handle();
 			HmiReg.is_alarm_paly = 0;
 		}
 		else
 		{
-			HmiReg.is_water_full = 1;
+			HmiReg.is_water_warning = 1;
 			if (SettingRegBuff.isAlarmOpen)
 			{
 				HmiReg.is_alarm_paly = 1;
 			}
-			water_full_handle();
+			water_warning_handle();//将持续放水
 		}
 	}
 }
@@ -197,7 +201,7 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef* htim)
 	if (htim == &htim3)//每秒检测闹钟和水满
 	{
 		AlarmCheck();
-		WaterFullCheck();
+		WaterWarningCheck();
 	}
 	if (htim == &htim2)
 	{
@@ -221,6 +225,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		else
 		{
 			HmiReg.is_water_low = 0;
+		}
+		break;
+	case WATER_FULL_Pin:
+		if (HAL_GPIO_ReadPin(WATER_FULL_GPIO_Port, WATER_FULL_Pin) == GPIO_PIN_SET)//到达高水位
+		{
+			HmiReg.is_water_high = 1;
+		}
+		else
+		{
+			HmiReg.is_water_high = 0;
 		}
 		break;
 	default:

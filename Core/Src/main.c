@@ -575,6 +575,12 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, PLAY_E_Pin|REC_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin : WATER_FULL_Pin */
+  GPIO_InitStruct.Pin = WATER_FULL_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(WATER_FULL_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pin : WATER_LOW_Pin */
   GPIO_InitStruct.Pin = WATER_LOW_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;

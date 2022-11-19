@@ -57,8 +57,11 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define WATER_FULL_Pin GPIO_PIN_1
+#define WATER_WARNING_Pin GPIO_PIN_1
+#define WATER_WARNING_GPIO_Port GPIOB
+#define WATER_FULL_Pin GPIO_PIN_11
 #define WATER_FULL_GPIO_Port GPIOB
+#define WATER_FULL_EXTI_IRQn EXTI15_10_IRQn
 #define WATER_LOW_Pin GPIO_PIN_12
 #define WATER_LOW_GPIO_Port GPIOB
 #define WATER_LOW_EXTI_IRQn EXTI15_10_IRQn

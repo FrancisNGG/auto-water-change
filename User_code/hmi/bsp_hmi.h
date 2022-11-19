@@ -34,8 +34,9 @@ typedef struct HMI_REG_s
 	uint8_t is_time_up;//每秒刷新HMI时间标志位
 	uint8_t is_date_up;//每秒刷新HMI时间标志位
 	uint8_t is_alarm;//设置自动换水时间标志位
-	uint8_t is_water_full;//水满标志位
+	uint8_t is_water_warning;//水满标志位
 	uint8_t is_water_low;//低水位标志位
+	uint8_t is_water_high;//高水位标志位
 	uint16_t water_error_time;//水满，自动放水的时长		
 	uint8_t is_alarm_paly;//到达声音警报时间标志位
 	int16_t adc_val_last;//上一次ADC记录值
@@ -49,7 +50,8 @@ extern void click_run();
 extern void water_in_handle();
 extern void water_out_handle();
 extern void water_stop_handle();
-extern void water_full_handle();
+extern void water_high_handle();
+extern void water_warning_handle();
 extern void warning_clear_handle();
 extern void hmi_cmd_transmit(char* cmd, ...);
 extern void MenuUARTFuntion(uint8_t* dat);
